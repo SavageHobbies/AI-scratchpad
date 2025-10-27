@@ -339,7 +339,7 @@ const ChatInterface: React.FC = () => {
         setSessionEnded(false);
         setSummary(null);
         setScratchpadText('');
-        startSession();
+        startSession(contextText);
     };
 
     const handleStopLiveSession = () => {
@@ -555,12 +555,19 @@ const ChatInterface: React.FC = () => {
                            {(!isConnected && !isConnecting && !sessionEnded) && (
                                <div className="h-full flex flex-col items-center justify-center text-center">
                                     <h2 className="text-xl font-bold mb-4">Live Conversation Mode</h2>
+                                    {contextText && (
+                                        <div className="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-lg text-center text-sm w-full max-w-md">
+                                            <p className="text-slate-300">
+                                                <span className="font-bold text-cyan-400">Context Loaded:</span> The AI is ready to discuss the document you provided.
+                                            </p>
+                                        </div>
+                                    )}
                                     <p className="text-slate-400 mb-6">Click the button to start a real-time voice conversation with the AI.</p>
                                     <button onClick={handleStartLiveSession} className="px-8 py-4 btn-gradient-primary rounded-full text-white font-bold flex items-center space-x-3 hover:opacity-90 transition-transform hover:scale-105 shadow-lg shadow-purple-600/30">
                                         <MicrophoneIcon className="w-6 h-6" />
                                         <span>Start Conversation</span>
                                     </button>
-                                    {error && <p className="text-red-400 mt-4 text-sm">{error}</p>}
+                                    {error && <p className="text-red-400 mt-4 text-sm whitespace-pre-wrap">{error}</p>}
                                </div>
                            )}
                            {isConnecting && (

@@ -11,6 +11,7 @@ if (!API_KEY) {
 const INPUT_SAMPLE_RATE = 16000;
 const OUTPUT_SAMPLE_RATE = 24000;
 const BUFFER_SIZE = 4096;
+const MAX_CONTEXT_LENGTH = 4000; // Safeguard against "Invalid argument" errors
 
 const addToScratchpadTool: FunctionDeclaration = {
   name: 'addToScratchpad',
@@ -31,8 +32,6 @@ export const useLiveAudio = (onAddToScratchpad: (content: string) => void) => {
     const [isConnecting, setIsConnecting] = useState<boolean>(false);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [transcriptHistory, setTranscriptHistory] = useState<Transcript[]>([]);
-    const [currentUserUtterance, setCurrentUserUtterance] = useState('');
-    const [currentModelUtterance, setCurrentModelUtterance] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
@@ -47,7 +46,6 @@ export const useLiveAudio = (onAddToScratchpad: (content: string) => void) => {
     const audioLevelRef = useRef(0);
     const transcriptIdCounter = useRef(0);
     
-    // Use refs to store the latest utterance text to avoid stale closures in callbacks.
     const userUtteranceRef = useRef('');
     const modelUtteranceRef = useRef('');
 
@@ -86,34 +84,6 @@ export const useLiveAudio = (onAddToScratchpad: (content: string) => void) => {
         nextStartTimeRef.current = 0;
     }, []);
     
-    const commitFinalUtterances = useCallback(() => {
-        const finalTranscripts: Transcript[] = [];
-        if (userUtteranceRef.current) {
-            finalTranscripts.push({
-                id: `t_${++transcriptIdCounter.current}`,
-                text: userUtteranceRef.current,
-                source: 'user',
-            });
-        }
-        if (modelUtteranceRef.current) {
-            finalTranscripts.push({
-                id: `t_${++transcriptIdCounter.current}`,
-                text: modelUtteranceRef.current,
-                source: 'model',
-            });
-        }
-        
-        if (finalTranscripts.length > 0) {
-            setTranscriptHistory(prev => [...prev, ...finalTranscripts]);
-        }
-
-        userUtteranceRef.current = '';
-        modelUtteranceRef.current = '';
-        setCurrentUserUtterance('');
-        setCurrentModelUtterance('');
-    }, []);
-
-
     const stopSession = useCallback(async () => {
         if (sessionPromiseRef.current) {
             try {
@@ -149,18 +119,14 @@ export const useLiveAudio = (onAddToScratchpad: (content: string) => void) => {
         audioLevelRef.current = 0;
         setIsConnected(false);
         setIsConnecting(false);
-        commitFinalUtterances();
+    }, [stopAllPlayback]);
 
-    }, [stopAllPlayback, commitFinalUtterances]);
-
-    const startSession = useCallback(async () => {
+    const startSession = useCallback(async (context?: string) => {
         setIsConnecting(true);
         setError(null);
         setTranscriptHistory([]);
         userUtteranceRef.current = '';
         modelUtteranceRef.current = '';
-        setCurrentUserUtterance('');
-        setCurrentModelUtterance('');
         transcriptIdCounter.current = 0;
 
         try {
@@ -176,6 +142,12 @@ export const useLiveAudio = (onAddToScratchpad: (content: string) => void) => {
             inputAudioContextRef.current = new ((window as any).AudioContext || (window as any).webkitAudioContext)({ sampleRate: INPUT_SAMPLE_RATE });
 
             const freshAI = new GoogleGenAI({ apiKey: API_KEY });
+
+            let systemInstruction: string | undefined;
+            if (context && context.trim()) {
+                const truncatedContext = context.substring(0, MAX_CONTEXT_LENGTH);
+                systemInstruction = `You are a helpful AI assistant. The user has provided the following document to discuss. Base your answers on this document. The document is:\n\n${truncatedContext}`;
+            }
 
             const sessionPromise = freshAI.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
@@ -232,13 +204,11 @@ export const useLiveAudio = (onAddToScratchpad: (content: string) => void) => {
                         }
 
                         if (message.serverContent?.inputTranscription) {
-                            const text = message.serverContent.inputTranscription.text;
-                            userUtteranceRef.current += text;
+                            userUtteranceRef.current += message.serverContent.inputTranscription.text;
                         }
                         
                         if (message.serverContent?.outputTranscription) {
-                           const text = message.serverContent.outputTranscription.text;
-                           modelUtteranceRef.current += text;
+                           modelUtteranceRef.current += message.serverContent.outputTranscription.text;
                         }
 
                         if (message.serverContent?.turnComplete) {
@@ -284,6 +254,7 @@ export const useLiveAudio = (onAddToScratchpad: (content: string) => void) => {
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
                     tools: [{ functionDeclarations: [addToScratchpadTool] }],
+                    ...(systemInstruction && { systemInstruction }),
                 },
             });
 
