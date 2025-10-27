@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from 'react';
 import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, FunctionDeclaration, Type } from "@google/genai";
 import { Transcript } from '../types';
@@ -11,7 +12,7 @@ if (!API_KEY) {
 const INPUT_SAMPLE_RATE = 16000;
 const OUTPUT_SAMPLE_RATE = 24000;
 const BUFFER_SIZE = 4096;
-const MAX_CONTEXT_LENGTH = 4000; // Safeguard against "Invalid argument" errors
+const MAX_CONTEXT_LENGTH = 4000; 
 
 const addToScratchpadTool: FunctionDeclaration = {
   name: 'addToScratchpad',

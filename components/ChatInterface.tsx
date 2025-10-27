@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { AppMode, ChatMessage, Transcript } from '../types';
 import { getChatResponse, getTextToSpeech, resetChat, organizeNotes, summarizeConversation } from '../services/geminiService';
@@ -430,30 +431,42 @@ const ChatInterface: React.FC = () => {
     const renderTextChat = () => (
         <div className="p-4 sm:p-6 h-[75vh] flex flex-col">
             {!contextText ? (
-                <form onSubmit={handleContextSubmit} className="flex-grow flex flex-col justify-center space-y-4">
-                    <div>
-                        <label htmlFor="context-paste-area" className="block text-lg font-medium text-slate-300 mb-2">
-                            Provide Text to Discuss
-                        </label>
-                        <textarea 
-                            id="context-paste-area"
-                            value={pastedText} 
-                            onChange={e => setPastedText(e.target.value)} 
-                            placeholder="Paste text from an article or document here..." 
-                            className="w-full h-96 p-3 bg-slate-900/80 border border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all" 
-                        />
-                         <p className="text-xs text-slate-500 mt-2">
-                            Tip: To discuss content from a web page, please copy and paste the text here. Direct URL fetching is not supported due to browser security restrictions.
-                        </p>
+                <div className="flex-grow flex flex-col justify-center space-y-6">
+                    <div className="p-6 bg-slate-800/50 border border-slate-700/80 rounded-xl">
+                      <h2 className="text-xl font-bold text-cyan-300 mb-3">How It Works</h2>
+                      <ol className="list-decimal list-inside space-y-2 text-slate-300">
+                        <li>Paste any text you want to analyze or discuss into the text area below.</li>
+                        <li>Use the <span className="font-semibold text-white">Chat About Text</span> mode for a text-based Q&A.</li>
+                        <li>Press <span className="font-semibold text-white">"Read Aloud"</span> to have the document read to you.</li>
+                        <li>Switch to <span className="font-semibold text-white">Live Conversation</span> for a real-time voice discussion with the AI.</li>
+                        <li>During a voice chat, use the <span className="font-semibold text-white">Scratchpad</span> to take notes manually or by voice command.</li>
+                      </ol>
                     </div>
-                    <button 
-                        type="submit" 
-                        className="w-full btn-gradient-secondary text-white font-bold py-3 px-4 rounded-lg transition-transform duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-500/30" 
-                        disabled={!pastedText.trim()}
-                    >
-                        Start Conversation
-                    </button>
-                </form>
+                    <form onSubmit={handleContextSubmit} className="space-y-4">
+                        <div>
+                            <label htmlFor="context-paste-area" className="block text-lg font-medium text-slate-300 mb-2">
+                                Provide Text to Discuss
+                            </label>
+                            <textarea 
+                                id="context-paste-area"
+                                value={pastedText} 
+                                onChange={e => setPastedText(e.target.value)} 
+                                placeholder="Paste text from an article or document here..." 
+                                className="w-full h-60 p-3 bg-slate-900/80 border border-slate-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all" 
+                            />
+                            <p className="text-xs text-slate-500 mt-2">
+                                Tip: To discuss content from a web page, please copy and paste the text here. Direct URL fetching is not supported due to browser security restrictions.
+                            </p>
+                        </div>
+                        <button 
+                            type="submit" 
+                            className="w-full btn-gradient-secondary text-white font-bold py-3 px-4 rounded-lg transition-transform duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-500/30" 
+                            disabled={!pastedText.trim()}
+                        >
+                            Start Conversation
+                        </button>
+                    </form>
+                </div>
             ) : (
                 <div className="flex flex-col h-full">
                     <div className="border-b border-slate-700 pb-4 mb-4">
@@ -633,7 +646,7 @@ const ChatInterface: React.FC = () => {
                          <div className="flex-grow flex flex-col">
                              <div className="p-3 mb-4 bg-slate-800/80 border-l-4 border-cyan-400 text-slate-300 text-sm rounded-r-lg">
                                 <p className="font-bold text-white mb-1">Using the Scratchpad</p>
-                                <p className="text-xs">You can type notes here directly.</p>
+                                <p className="text-xs">You can type notes here directly, or ask the AI to add information for you with voice commands like "Add that to my notes."</p>
                              </div>
                              <h3 className="text-lg font-semibold mb-2 text-slate-300">Scratchpad</h3>
                              <textarea 
