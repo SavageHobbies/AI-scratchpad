@@ -1,0 +1,7 @@
+{
+  "name": "Working Copy of AI Conversationalist",
+  "description": "An application that allows you to have a real-time voice conversation with an AI, get it to read text aloud, and chat about content you provide from a URL or by pasting text.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
